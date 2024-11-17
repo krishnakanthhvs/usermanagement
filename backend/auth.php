@@ -1,62 +1,47 @@
 <?php
 session_start();
 include 'db.php';
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Capture the login form inputs
     $email = $_POST['email'];
     $password = $_POST['password'];
 
     try {
-        // Fetch user details
+        // Query the database for the user with the provided email
         $sql = "SELECT * FROM users WHERE email = :email";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([':email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Check if user exists
-        if (!$user) {
-            echo "User not found!";
-            exit;
-        }
+        // If user exists and the password matches
+        if ($user && password_verify($password, $user['password'])) {
+            // Set session variables
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_role'] = $user['role'];
 
-        // Check if user is approved
-        if (!$user['approved']) {
-            echo "Your account is not approved by the admin.";
-            exit;
-        }
-
-        // Verify password
-        if (!password_verify($password, $user['password'])) {
-            echo "Invalid password!";
-            exit;
-        }
-
-        // Store user info in session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['name'] = $user['name'];
-
-        // Redirect based on role
-        switch ($user['role']) {
-            case 'Super Admin':
+            // Redirect based on role
+            if ($user['role'] == 'Super Admin') {
                 header("Location: ../dashboard/superadmin.php");
-                break;
-            case 'Admin':
+            } elseif ($user['role'] == 'Admin') {
                 header("Location: ../dashboard/admin.php");
-                break;
-            case 'User':
+            } else {
                 header("Location: ../dashboard/user.php");
-                break;
-            default:
-                echo "Invalid user role!";
-                exit;
+            }
+            exit;
+        } else {
+            // Redirect back with error message
+            header("Location: ../index.php?error=Invalid credentials");
+            exit;
         }
     } catch (PDOException $e) {
-        die("Error during authentication: " . $e->getMessage());
+        // Handle error gracefully and redirect with error message
+        header("Location: ../index.php?error=An error occurred. Please try again.");
+        exit;
     }
 } else {
-    echo "Invalid request method.";
+    // If the form is not submitted, redirect to the login page
+    header("Location: ../index.php");
+    exit;
 }
 ?>

@@ -1,11 +1,19 @@
 <?php
 include 'db.php';
+session_start();  // Start the session to check the user's role
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Check if the user is an admin or super admin
+$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'User'; // Default to 'User' if not logged in
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'];
-    $role = $_POST['role'];
+    
+    // If the user is an admin or super admin, allow role selection, otherwise default to 'User'
+    $role = ($user_role === 'Admin' || $user_role === 'Super Admin') && isset($_POST['role']) ? $_POST['role'] : 'User';
+    
     $mobile = $_POST['mobile'];
     $email = $_POST['email'];
     $address = $_POST['address'];
