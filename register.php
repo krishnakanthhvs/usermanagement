@@ -3,6 +3,13 @@ session_start();
 
 // Check if the logged-in user is an Admin or Super Admin
 $isAdminOrSuperAdmin = isset($_SESSION['user_role']) && ($_SESSION['user_role'] === 'Admin' || $_SESSION['user_role'] === 'Super Admin');
+
+// Display message if set
+$message = isset($_SESSION['message']) ? $_SESSION['message'] : null;
+$messageType = isset($_SESSION['message_type']) ? $_SESSION['message_type'] : null;
+
+// Clear the message after displaying
+unset($_SESSION['message'], $_SESSION['message_type']);
 ?>
 
 <!DOCTYPE html>
@@ -10,52 +17,97 @@ $isAdminOrSuperAdmin = isset($_SESSION['user_role']) && ($_SESSION['user_role'] 
 <head>
     <title>Register</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
 <body>
-<div class="login-wrapper">
-    <div class="login-container">
-        <h1 class="text-align-center">Register</h1>
+    <div class="form-container">
+        <div class="form-wrapper">
+            <h1 class="text-align-center">Register</h1>
 
-        <form action="backend/user_management.php" method="POST" enctype="multipart/form-data">
-    <label>Name:</label><br>
-    <input type="text" name="name" required><br>
+            <?php if ($message): ?>
+                <div class="message <?= htmlspecialchars($messageType) ?>">
+                    <?= htmlspecialchars($message) ?>
+                </div>
+            <?php endif; ?>
 
-    <?php if ($user_role === 'Admin' || $user_role === 'Super Admin'): ?>
-        <label>Role:</label><br>
-        <select name="role" id="role">
-            <option value="User">User</option>
-            <option value="Admin">Admin</option>
-            <option value="Super Admin">Super Admin</option>
-        </select><br>
-    <?php endif; ?>
+            <form action="backend/user_management.php" method="POST" enctype="multipart/form-data" class="form">
+                <div class="form-row">
+                    <label for="name">Name:</label>
+                    <input type="text" name="name" id="name" required>
+                </div>
 
-    <label>Mobile:</label><br>
-    <input type="text" name="mobile" required><br>
+                <div class="form-row">
+                    <label for="mobile">Mobile:</label>
+                    <input type="text" name="mobile" id="mobile" required>
+                </div>
 
-    <label>Email:</label><br>
-    <input type="email" name="email" required><br>
+                <?php if ($isAdminOrSuperAdmin): ?>
+                    <div class="form-row">
+                        <label for="role">Role:</label>
+                        <select name="role" id="role">
+                            <option value="User">User</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Super Admin">Super Admin</option>
+                        </select>
+                    </div>
+                <?php endif; ?>
 
-    <label>Address:</label><br>
-    <textarea name="address"></textarea><br>
+                <div class="form-row">
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" required>
+                </div>
 
-    <label>Gender:</label><br>
-    <input type="radio" name="gender" value="Male" required> Male
-    <input type="radio" name="gender" value="Female" required> Female
-    <input type="radio" name="gender" value="Other" required> Other<br>
+                <div class="form-row">
+                    <label for="address">Address:</label>
+                    <textarea name="address" id="address"></textarea>
+                </div>
 
-    <label>Date of Birth:</label><br>
-    <input type="date" name="date_of_birth" required><br>
+                <div class="form-row form-row-inline">
+                    <div class="form-group">
+                        <label>Gender:</label>
+                        <label><input type="radio" name="gender" value="Male" required> Male</label>
+                        <label><input type="radio" name="gender" value="Female" required> Female</label>
+                        <label><input type="radio" name="gender" value="Other" required> Other</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Date of Birth:</label>
+                        <input type="date" name="dob" id="dob" required>
+                    </div>
+                </div>
 
-    <label>Profile Picture:</label><br>
-    <input type="file" name="profile_picture" required><br>
+                <div class="form-row">
+                    <label for="profile_picture">Profile Picture:</label>
+                    <input type="file" name="profile_picture" id="profile_picture" required>
+                </div>
 
-    <label>Password:</label><br>
-    <input type="password" name="password" required><br>
+                <div class="form-row">
+                    <label for="password">Password:</label>
+                    <input type="password" name="password" id="password" required>
+                </div>
 
-    <button type="submit">Register</button>
-</form>
+                <div class="form-row">
+                    <button type="submit">Register</button>
+                </div>
+            </form>
 
+            <p class="text-align-center">
+                <a href="/index.php">Back to Login</a>
+            </p>
+        </div>
     </div>
-</div>
 </body>
 </html>

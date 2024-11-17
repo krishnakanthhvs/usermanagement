@@ -1,45 +1,123 @@
+<?php
+session_start();
+
+// Display message if set
+if (isset($_SESSION['message'])) {
+    $messageType = $_SESSION['message_type'] === "success" ? "success" : "error";
+    echo "<div class='message {$messageType}'>{$_SESSION['message']}</div>";
+    unset($_SESSION['message'], $_SESSION['message_type']); // Clear message
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Dashboard</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Admin Dashboard</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .logout-btn {
+            float: right;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        #paginationControls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+        }
+
+        .modal input, .modal select, .modal button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .modal button {
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <div class="topnav">
-        <h2>Super Admin Dashboard</h2>
-        <div class="user-info">
-            <img src="../uploads/default-profile.png" alt="Profile Picture" id="profilePicture">
-            <span id="loggedInUser">John Doe</span>
-            <button id="logoutButton">Logout</button>
-        </div>
-    </div>
+    <h1>Admin Dashboard</h1>
+    <button class="logout-btn" id="logout">Logout</button>
+    
+    <label for="recordsPerPage">Records per page: </label>
+    <select id="recordsPerPage">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="40">40</option>
+    </select>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <table id="userTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Mobile</th>
-                    <th>Address</th>
-                    <th>Gender</th>
-                    <th>DOB</th>
-                    <th>Profile Picture</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Dynamic Data Will Be Rendered Here -->
-            </tbody>
-        </table>
-    </div>
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Mobile</th>
+                <th>Address</th>
+                <th>Gender</th>
+                <th>DOB</th>
+                <th>Profile Picture</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamic Data Will Be Rendered Here -->
+        </tbody>
+    </table>
+
+    <div id="paginationControls"></div>
 
     <!-- Modal for Editing User -->
     <div class="modal-overlay"></div>
@@ -72,139 +150,170 @@
             <input type="file" name="profile_picture" id="editProfilePicture"><br>
             <button type="submit">Save Changes</button>
         </form>
-        <button id="closeModal">Close</button>
+        <button id="closeEditModal">Close</button>
     </div>
 
     <script>
-    $(document).ready(function () {
-        // Fetch user data and populate the table
-        function loadUsers() {
-            $.ajax({
-                url: "../backend/get_all_users.php",
-                method: "GET",
-                dataType: "json",
-                success: function (data) {
-                    if (data.error) {
-                        alert(data.error);
-                        return;
+        $(document).ready(function () {
+            let currentPage = 1;
+            let limit = 10;
+
+            // Load user data
+            function loadUsers(page = 1, limit = 10) {
+                $.ajax({
+                    url: "../backend/get_all_users.php",
+                    method: "GET",
+                    data: { page: page, limit: limit },
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+
+                        let rows = "";
+                        data.users.forEach(user => {
+                            rows += `
+                                <tr>
+                                    <td>${user.id}</td>
+                                    <td>${user.name}</td>
+                                    <td>${user.email}</td>
+                                    <td>${user.role}</td>
+                                    <td>${user.mobile}</td>
+                                    <td>${user.address}</td>
+                                    <td>${user.gender}</td>
+                                    <td>${user.dob || "N/A"}</td>
+                                    <td>
+                                        ${user.profile_picture ? `<img src="../uploads/${user.profile_picture}" alt="Profile" width="50">` : "No Picture"}
+                                    </td>
+                                    <td>
+                                        <a href="#" class="editUser" data-id="${user.id}">Edit</a> |
+                                        ${user.approved != 1 ? 
+                                            `<a href="../backend/approve_user.php?id=${user.id}">Approve</a>` : 
+                                            "<span>Approved</span>"
+                                        }
+                                        <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        $("#userTable tbody").html(rows);
+
+                        // Generate pagination controls
+                        const totalPages = Math.ceil(data.total_users / limit);
+                        let paginationControls = `<button ${page === 1 ? 'disabled' : ''} id="prevPage">Previous</button>`;
+                        for (let i = 1; i <= totalPages; i++) {
+                            paginationControls += `<button class="pageNumber" data-page="${i}" ${i === page ? 'disabled' : ''}>${i}</button>`;
+                        }
+                        paginationControls += `<button ${page === totalPages ? 'disabled' : ''} id="nextPage">Next</button>`;
+
+                        $("#paginationControls").html(paginationControls);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error fetching user data:", error);
                     }
+                });
+            }
 
-                    let rows = "";
-                    data.forEach(user => {
-                        let approveButton = user.approved === 1
-                            ? ""
-                            : `<a href="../backend/approve_user.php?id=${user.id}">Approve</a>`;
-                        rows += `
-                            <tr>
-                                <td>${user.id}</td>
-                                <td>${user.name}</td>
-                                <td>${user.email}</td>
-                                <td>${user.role}</td>
-                                <td>${user.mobile}</td>
-                                <td>${user.address}</td>
-                                <td>${user.gender}</td>
-                                <td>${user.dob || "N/A"}</td>
-                                <td>
-                                    ${user.profile_picture 
-                                        ? `<img src="../uploads/${user.profile_picture}" alt="Profile" width="50">` 
-                                        : "No Picture"}
-                                </td>
-                                <td>
-                                    <a href="#" class="editUser" data-id="${user.id}">Edit</a> |
-                                    ${approveButton} |
-                                    <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
-                                </td>
-                            </tr>`;
-                    });
+            loadUsers(currentPage, limit);
 
-                    $("#userTable tbody").html(rows);
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error fetching user data:", error);
-                    alert("Failed to load users. Please try again.");
+            // Pagination button click
+            $(document).on("click", ".pageNumber", function () {
+                currentPage = $(this).data("page");
+                loadUsers(currentPage, limit);
+            });
+
+            // Next page
+            $("#nextPage").click(function () {
+                if (currentPage < Math.ceil(totalUsers / limit)) {
+                    currentPage++;
+                    loadUsers(currentPage, limit);
                 }
             });
-        }
 
-        loadUsers();
+            // Previous page
+            $("#prevPage").click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadUsers(currentPage, limit);
+                }
+            });
 
-        // Show modal with user data for editing
-        $(document).on("click", ".editUser", function (e) {
-            e.preventDefault();
-            const userId = $(this).data("id");
+            // Change records per page
+            $("#recordsPerPage").change(function () {
+                limit = $(this).val();
+                loadUsers(currentPage, limit);
+            });
 
-            $.ajax({
-                url: `../backend/get_user.php?id=${userId}`, // Corrected URL syntax
-                method: "GET",
-                dataType: "json",
-                success: function (user) {
-                    if (user.error) {
-                        alert(user.error);
-                        return;
+            // Edit user functionality
+            $(document).on("click", ".editUser", function (e) {
+                e.preventDefault();
+                const userId = $(this).data("id");
+
+                // Fetch user data for editing
+                $.ajax({
+                    url: `../backend/get_user.php?id=${userId}`,
+                    method: "GET",
+                    dataType: "json",
+                    success: function (user) {
+                        if (user.error) {
+                            alert(user.error);
+                            return;
+                        }
+
+                        // Populate the modal with the user data
+                        $("#editUserId").val(user.id);
+                        $("#editName").val(user.name);
+                        $("#editEmail").val(user.email);
+                        $("#editRole").val(user.role);
+                        $("#editMobile").val(user.mobile);
+                        $("#editAddress").val(user.address);
+                        $("#editGender").val(user.gender);
+                        $("#editDob").val(user.dob);
+                        $("#editProfilePicture").val(null); // Reset the file input
+
+                        // Show the edit modal
+                        $(".modal-overlay, #editModal").fadeIn();
+                    },
+                    error: function () {
+                        alert("Error fetching user details.");
                     }
+                });
+            });
 
-                    // Populate the modal with the user data
-                    $("#editUserId").val(user.id);
-                    $("#editName").val(user.name);
-                    $("#editEmail").val(user.email);
-                    $("#editRole").val(user.role);
-                    $("#editMobile").val(user.mobile);
-                    $("#editAddress").val(user.address);
-                    $("#editGender").val(user.gender);
-                    $("#editDob").val(user.dob);
-                    $("#editProfilePicture").val(null); // Reset the file input
+            // Handle form submission for editing user
+            $("#editUserForm").submit(function (e) {
+                e.preventDefault();
 
-                    // Show the modal
-                    $(".modal-overlay, #editModal").fadeIn();
-                },
-                error: function () {
-                    alert("Error fetching user details.");
-                }
+                const formData = new FormData(this);
+                $.ajax({
+                    url: "../backend/edit_user.php",  // Backend script for editing users
+                    method: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        alert("User updated successfully.");
+                        $(".modal-overlay, #editModal").fadeOut();
+                        loadUsers(currentPage, limit);  // Reload the users after the update
+                    },
+                    error: function () {
+                        alert("Failed to update user.");
+                    }
+                });
+            });
+
+            // Close the edit modal
+            $("#closeEditModal").click(function () {
+                $(".modal-overlay, #editModal").fadeOut();
+            });
+
+            // Logout
+            $("#logout").click(function () {
+                window.location.href = "../backend/logout.php";
             });
         });
-
-        // Close modal
-        $("#closeModal").click(function () {
-            $(".modal-overlay, #editModal").fadeOut();
-        });
-
-        // Handle form submission for editing user
-        $("#editUserForm").submit(function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            $.ajax({
-                url: "../backend/edit_user.php",
-                method: "POST",
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (response) {
-                    alert("User updated successfully.");
-                    $(".modal-overlay, #editModal").fadeOut();
-                    loadUsers();
-                },
-                error: function () {
-                    alert("Failed to update user.");
-                }
-            });
-        });
-
-        // Logout functionality
-        $("#logoutButton").click(function () {
-            $.ajax({
-                url: "../backend/logout.php",
-                method: "GET",
-                success: function () {
-                    window.location.href = "../index.php";
-                },
-                error: function () {
-                    alert("Error logging out.");
-                }
-            });
-        });
-    });
-</script>
-
+    </script>
 </body>
 </html>

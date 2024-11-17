@@ -1,19 +1,26 @@
 <?php
-session_start();
 include 'db.php';
 
-// Check if admin or super admin is logged in
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['Admin', 'Super Admin'])) {
-    header("Content-Type: application/json");
-    echo json_encode(['error' => 'Unauthorized access']);
-    exit;
-}
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1; // Get the current page or default to 1
+$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10; // Get the limit or default to 10
+$offset = ($page - 1) * $limit; // Calculate the offset
 
-$sql = "SELECT id, name, email, role, mobile, address, gender, dob, profile_picture FROM users";
+// Query to fetch users with pagination
+$sql = "SELECT id, name, email, role, mobile, address, gender, dob, profile_picture, approved FROM users LIMIT :limit OFFSET :offset";
 $stmt = $pdo->prepare($sql);
+$stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-header("Content-Type: application/json");
-echo json_encode($users);
+// Query to get the total number of users for pagination
+$sqlTotal = "SELECT COUNT(*) FROM users";
+$totalUsers = $pdo->query($sqlTotal)->fetchColumn();
+
+$response = [
+    'users' => $users,
+    'total_users' => $totalUsers,
+];
+
+echo json_encode($response);
 ?>

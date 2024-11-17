@@ -1,10 +1,16 @@
 <?php
 include 'db.php';
 
-function approveUser($userId) {
-    global $pdo;
+// Start session to maintain login information (if needed)
+session_start();
 
-    // Start a try-catch block for error handling
+if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] !== 'Admin' && $_SESSION['user_role'] !== 'Super Admin')) {
+    die("Unauthorized access.");
+}
+
+if (isset($_GET['id'])) {
+    $userId = intval($_GET['id']); // Sanitize the user ID
+
     try {
         $sql = "UPDATE users SET approved = 1 WHERE id = :id";
         $stmt = $pdo->prepare($sql);
@@ -12,13 +18,37 @@ function approveUser($userId) {
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            echo "User approved successfully.";
+            // Success message
+            $_SESSION['message'] = "User approved successfully.";
+            $_SESSION['message_type'] = "success";
         } else {
-            echo "No rows updated. Make sure the user exists and is not already approved.";
+            // Error message if no rows were updated
+            $_SESSION['message'] = "User not found or already approved.";
+            $_SESSION['message_type'] = "error";
         }
     } catch (PDOException $e) {
-        // Catch and display the error
-        echo "Error updating user: " . $e->getMessage();
+        // Handle and log the error, then display a user-friendly message
+        $_SESSION['message'] = "Error approving user: " . $e->getMessage();
+        $_SESSION['message_type'] = "error";
     }
+
+    // Conditional redirect based on user role
+    if ($_SESSION['user_role'] === 'Super Admin') {
+        header("Location: ../dashboard/superadmin.php");
+    } else {
+        header("Location: ../dashboard/admin.php");
+    }
+
+    exit;
+} else {
+    $_SESSION['message'] = "No user ID provided.";
+    $_SESSION['message_type'] = "error";
+    // Redirect to the dashboard based on user role
+    if ($_SESSION['user_role'] === 'Super Admin') {
+        header("Location: ../dashboard/superadmin.php");
+    } else {
+        header("Location: ../dashboard/admin.php");
+    }
+    exit;
 }
 ?>
