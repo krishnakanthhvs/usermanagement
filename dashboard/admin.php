@@ -104,8 +104,11 @@ if (isset($_SESSION['message'])) {
                         </td>
                         <td>
                             ${user.pending_changes ? 
-                                `<a href="../backend/approve_user.php?id=${user.id}">Approve Changes</a>` : 
-                                "<span>Approved</span>"
+                                `<a href="../backend/approve_user.php?id=${user.id}">Approve Changes</a>` :
+                                (user.approved == 0 ? 
+                                    `<a href="../backend/approve_user.php?id=${user.id}">Approve User</a>` : 
+                                    "<span>Approved</span>"
+                                )
                             }
                             <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
                         </td>

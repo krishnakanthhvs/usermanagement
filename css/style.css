@@ -275,79 +275,114 @@ th, td {
 
 /* Page Layout */
 .form-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 25rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: #f4f4f4;
+    flex-direction: column;
+    height: 100%;
 }
 
 .form-wrapper {
     background-color: white;
     padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     width: 100%;
-    max-width: 500px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    min-height: 400px; /* Set a minimum height for the form */
 }
 
-.form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.text-align-center {
+    text-align: center;
 }
 
 .form-row {
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-row label {
+    display: block;
+    font-weight: bold;
+}
+
+.form-row input,
+.form-row textarea,
+.form-row select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
 .form-row-inline {
     display: flex;
     justify-content: space-between;
-    gap: 15px;
 }
 
 .form-group {
     flex: 1;
+    padding: 0 10px;
 }
 
-.form-row label {
-    font-weight: bold;
+.form-row-inline .form-group label {
     margin-bottom: 5px;
-    color: #333;
-}
-
-.form-row input, .form-row select, .form-row textarea {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.form-row textarea {
-    resize: vertical;
-    min-height: 10px;
 }
 
 .form-row button {
+    width: 100%;
     padding: 12px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
 }
 
 .form-row button:hover {
     background-color: #0056b3;
 }
 
-.form-row label input[type="radio"] {
-    margin-right: 5px;
+.message {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    text-align: center;
 }
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;  /* Aligns the radio button and label vertically */
+    gap: 15px;  /* Adds space between each radio button and label pair */
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;  /* Ensures the radio button dot and text are aligned */
+}
+
 
 .text-align-center a {
     color: #007bff;

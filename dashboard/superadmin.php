@@ -29,91 +29,57 @@ if (isset($_SESSION['message'])) {
 
     <div class="m-4">
         <div class="controls">
-        <div class="left-control">
-            <label for="recordsPerPage" class="records-label">Records </label>
-            <select id="recordsPerPage">
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="30">30</option>
-                <option value="40">40</option>
-            </select>
-            <label for="recordsPerPage" class="records-label">page</label>
+            <div class="left-control">
+                <label for="recordsPerPage" class="records-label">Records </label>
+                <select id="recordsPerPage">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="40">40</option>
+                </select>
+                <label for="recordsPerPage" class="records-label">page</label>
+            </div>
+            <div class="right-control">
+                <label for="searchInput" class="search-label">Search:</label>
+                <input type="text" id="searchInput" placeholder="Search users by name, email, or role">
+            </div>
         </div>
-        <div class="right-control">
-            <label for="searchInput" class="search-label">Search:</label>
-            <input type="text" id="searchInput" placeholder="Search users by name, email, or role">
-        </div>
-    </div>
 
-    <table id="userTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Mobile</th>
-                <th>Address</th>
-                <th>Gender</th>
-                <th>DOB</th>
-                <th>Profile Picture</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Dynamic Data Will Be Rendered Here -->
-        </tbody>
-    </table>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Mobile</th>
+                    <th>Address</th>
+                    <th>Gender</th>
+                    <th>DOB</th>
+                    <th>Profile Picture</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamic Data Will Be Rendered Here -->
+            </tbody>
+        </table>
     </div>
     
-
     <div id="paginationControls"></div>
-
-    <!-- Modal for Editing User -->
-    <div class="modal-overlay"></div>
-    <div class="modal" id="editModal">
-        <h2>Edit User</h2>
-        <form id="editUserForm">
-            <input type="hidden" name="id" id="editUserId">
-            <label>Name:</label><br>
-            <input type="text" name="name" id="editName" required><br>
-            <label>Email:</label><br>
-            <input type="email" name="email" id="editEmail" required><br>
-            <label>Role:</label><br>
-            <select name="role" id="editRole" required>
-                <option value="User">User</option>
-                <option value="Admin">Admin</option>
-            </select><br>
-            <label>Mobile:</label><br>
-            <input type="text" name="mobile" id="editMobile" required><br>
-            <label>Address:</label><br>
-            <input type="text" name="address" id="editAddress" required><br>
-            <label>Gender:</label><br>
-            <select name="gender" id="editGender" required>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-            </select><br>
-            <label>Date of Birth:</label><br>
-            <input type="date" name="dob" id="editDob"><br>
-            <label>Profile Picture:</label><br>
-            <input type="file" name="profile_picture" id="editProfilePicture"><br>
-            <button type="submit">Save Changes</button>
-        </form>
-        <button id="closeEditModal">Close</button>
-    </div>
 
     <script>
         $(document).ready(function () {
             let currentPage = 1;
             let limit = 10;
+            let searchQuery = "";
 
             // Load user data
-            function loadUsers(page = 1, limit = 10) {
+            function loadUsers(page = 1, limit = 10, query = "") {
                 $.ajax({
                     url: "../backend/get_all_users.php",
                     method: "GET",
-                    data: { page: page, limit: limit },
+                    data: { page: page, limit: limit, search: query },
                     dataType: "json",
                     success: function (data) {
                         if (data.error) {
@@ -138,9 +104,12 @@ if (isset($_SESSION['message'])) {
                                     </td>
                                     <td>
                                         <a href="#" class="editUser" data-id="${user.id}">Edit</a> |
-                                        ${user.approved != 1 ? 
-                                            `<a href="../backend/approve_user.php?id=${user.id}">Approve</a>` : 
-                                            "<span>Approved</span>"
+                                        ${user.pending_changes ? 
+                                            `<a href="../backend/approve_user.php?id=${user.id}">Approve Changes</a>` :
+                                            (user.approved == 0 ? 
+                                                `<a href="../backend/approve_user.php?id=${user.id}">Approve User</a>` : 
+                                                "<span>Approved</span>"
+                                            )
                                         }
                                         <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
                                     </td>
@@ -171,14 +140,14 @@ if (isset($_SESSION['message'])) {
             // Pagination button click
             $(document).on("click", ".pageNumber", function () {
                 currentPage = $(this).data("page");
-                loadUsers(currentPage, limit);
+                loadUsers(currentPage, limit, searchQuery);
             });
 
             // Next page
             $("#nextPage").click(function () {
                 if (currentPage < Math.ceil(totalUsers / limit)) {
                     currentPage++;
-                    loadUsers(currentPage, limit);
+                    loadUsers(currentPage, limit, searchQuery);
                 }
             });
 
@@ -186,185 +155,37 @@ if (isset($_SESSION['message'])) {
             $("#prevPage").click(function () {
                 if (currentPage > 1) {
                     currentPage--;
-                    loadUsers(currentPage, limit);
+                    loadUsers(currentPage, limit, searchQuery);
                 }
             });
 
             // Change records per page
             $("#recordsPerPage").change(function () {
                 limit = $(this).val();
-                loadUsers(currentPage, limit);
+                loadUsers(currentPage, limit, searchQuery);
             });
 
-            // Edit user functionality
-            $(document).on("click", ".editUser", function (e) {
-                e.preventDefault();
-                const userId = $(this).data("id");
-
-                // Fetch user data for editing
-                $.ajax({
-                    url: `../backend/get_user.php?id=${userId}`,
-                    method: "GET",
-                    dataType: "json",
-                    success: function (user) {
-                        if (user.error) {
-                            alert(user.error);
-                            return;
-                        }
-
-                        // Populate the modal with the user data
-                        $("#editUserId").val(user.id);
-                        $("#editName").val(user.name);
-                        $("#editEmail").val(user.email);
-                        $("#editRole").val(user.role);
-                        $("#editMobile").val(user.mobile);
-                        $("#editAddress").val(user.address);
-                        $("#editGender").val(user.gender);
-                        $("#editDob").val(user.dob);
-                        $("#editProfilePicture").val(null); // Reset the file input
-
-                        // Show the edit modal
-                        $(".modal-overlay, #editModal").fadeIn();
-                    },
-                    error: function () {
-                        alert("Error fetching user details.");
-                    }
-                });
+            // Search functionality
+            $("#searchInput").on("keyup", function () {
+                searchQuery = $(this).val();
+                loadUsers(currentPage, limit, searchQuery);
             });
 
-            // Handle form submission for editing user
-            $("#editUserForm").submit(function (e) {
-                e.preventDefault();
-
-                const formData = new FormData(this);
-                $.ajax({
-                    url: "../backend/edit_user.php",  // Backend script for editing users
-                    method: "POST",
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function (response) {
-                        alert("User updated successfully.");
-                        $(".modal-overlay, #editModal").fadeOut();
-                        loadUsers(currentPage, limit);  // Reload the users after the update
-                    },
-                    error: function () {
-                        alert("Failed to update user.");
-                    }
-                });
-            });
-
-            // Close the edit modal
-            $("#closeEditModal").click(function () {
-                $(".modal-overlay, #editModal").fadeOut();
-            });
-
-            // Logout
+            // Logout functionality
             $("#logout").click(function () {
-                window.location.href = "../backend/logout.php";
+                $.ajax({
+                    url: "../backend/logout.php",
+                    method: "POST",
+                    success: function () {
+                        alert("Logged out successfully.");
+                        window.location.href = "../index.php"; // Redirect to login page
+                    },
+                    error: function () {
+                        alert("Failed to logout.");
+                    }
+                });
             });
         });
-
-        $(document).ready(function () {
-    let currentPage = 1;
-    let limit = 10;
-    let searchQuery = "";
-
-    // Load user data
-    function loadUsers(page = 1, limit = 10, query = "") {
-        $.ajax({
-            url: "../backend/get_all_users.php",
-            method: "GET",
-            data: { page: page, limit: limit, search: query },
-            dataType: "json",
-            success: function (data) {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                let rows = "";
-                data.users.forEach(user => {
-                    rows += `
-                        <tr>
-                            <td>${user.id}</td>
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                            <td>${user.role}</td>
-                            <td>${user.mobile}</td>
-                            <td>${user.address}</td>
-                            <td>${user.gender}</td>
-                            <td>${user.dob || "N/A"}</td>
-                            <td>
-                                ${user.profile_picture ? `<img src="../uploads/${user.profile_picture}" alt="Profile" width="50">` : "No Picture"}
-                            </td>
-                            <td>
-                                <a href="#" class="editUser" data-id="${user.id}">Edit</a> |
-                                ${user.approved != 1 ? 
-                                    `<a href="../backend/approve_user.php?id=${user.id}">Approve</a>` : 
-                                    "<span>Approved</span>"
-                                }
-                                <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                $("#userTable tbody").html(rows);
-
-                // Generate pagination controls
-                const totalPages = Math.ceil(data.total_users / limit);
-                let paginationControls = `<button ${page === 1 ? 'disabled' : ''} id="prevPage">Previous</button>`;
-                for (let i = 1; i <= totalPages; i++) {
-                    paginationControls += `<button class="pageNumber" data-page="${i}" ${i === page ? 'disabled' : ''}>${i}</button>`;
-                }
-                paginationControls += `<button ${page === totalPages ? 'disabled' : ''} id="nextPage">Next</button>`;
-
-                $("#paginationControls").html(paginationControls);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error fetching user data:", error);
-            }
-        });
-    }
-
-    loadUsers(currentPage, limit);
-
-    // Search functionality
-    $("#searchInput").on("keyup", function () {
-        searchQuery = $(this).val();
-        loadUsers(currentPage, limit, searchQuery);
-    });
-
-    // Pagination button click
-    $(document).on("click", ".pageNumber", function () {
-        currentPage = $(this).data("page");
-        loadUsers(currentPage, limit, searchQuery);
-    });
-
-    // Next page
-    $("#nextPage").click(function () {
-        if (currentPage < Math.ceil(totalUsers / limit)) {
-            currentPage++;
-            loadUsers(currentPage, limit, searchQuery);
-        }
-    });
-
-    // Previous page
-    $("#prevPage").click(function () {
-        if (currentPage > 1) {
-            currentPage--;
-            loadUsers(currentPage, limit, searchQuery);
-        }
-    });
-
-    // Change records per page
-    $("#recordsPerPage").change(function () {
-        limit = $(this).val();
-        loadUsers(currentPage, limit, searchQuery);
-    });
-});
-
     </script>
 </body>
 </html>

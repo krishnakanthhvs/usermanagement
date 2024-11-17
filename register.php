@@ -16,22 +16,9 @@ unset($_SESSION['message'], $_SESSION['message_type']);
 <html>
 <head>
     <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        .message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-    </style>
+
 </head>
 <body>
     <div class="form-container">
@@ -78,10 +65,11 @@ unset($_SESSION['message'], $_SESSION['message_type']);
 
                 <div class="form-row form-row-inline">
                     <div class="form-group">
-                        <label>Gender:</label>
+                        <label for="gender">Gender</label>
                         <label><input type="radio" name="gender" value="Male" required> Male</label>
-                        <label><input type="radio" name="gender" value="Female" required> Female</label>
-                        <label><input type="radio" name="gender" value="Other" required> Other</label>
+    <label><input type="radio" name="gender" value="Female" required> Female</label>
+    <label><input type="radio" name="gender" value="Other" required> Other</label>
+
                     </div>
                     <div class="form-group">
                         <label for="dob">Date of Birth:</label>
