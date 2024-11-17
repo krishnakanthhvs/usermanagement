@@ -57,21 +57,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <!-- Top Navigation Bar -->
-    <div class="topnav">
-        <h2>User Dashboard</h2>
+    <div class="header">
+        <h1>User Dashboard</h1>
         <div class="user-info">
             <img src="../uploads/<?= htmlspecialchars($user['profile_picture']) ?>" alt="Profile Picture" id="profilePicture" width="40">
             <span id="loggedInUser"><?= htmlspecialchars($user['name']) ?></span>
-            <button id="logoutButton">Logout</button>
+            <button class="logout-btn" id="logoutButton">Logout</button>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
-        <h1>Welcome, <?= htmlspecialchars($user['name']) ?></h1>
-        <img src="../uploads/<?= htmlspecialchars($user['profile_picture']) ?>" alt="Profile Picture" width="150"><br>
-
-        <h2>Your Profile</h2>
+        <div class="user-info">
+            <h1>Welcome, <?= htmlspecialchars($user['name']) ?></h1>
+            <!-- <img src="../uploads/<?= htmlspecialchars($user['profile_picture']) ?>" alt="Profile Picture" width="150" class="profile-picture"> -->
+        </div>
+        <div class="user-dashboard">
+        
+        
         <form method="POST" enctype="multipart/form-data">
             <label>Name:</label><br>
             <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>" <?= $user['pending_changes'] ? 'readonly' : '' ?>><br>
@@ -95,15 +98,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="date" name="dob" value="<?= htmlspecialchars($user['dob']) ?>" <?= $user['pending_changes'] ? 'readonly' : '' ?>><br>
 
             <label>Profile Picture:</label><br>
+            <!-- Show current profile picture if available -->
+            <?php if ($user['profile_picture']): ?>
+                <img src="../uploads/<?= htmlspecialchars($user['profile_picture']) ?>" alt="Profile Picture" width="100"><br>
+            <?php endif; ?>
             <input type="file" name="profile_picture" <?= $user['pending_changes'] ? 'disabled' : '' ?>><br>
 
             <button type="submit" <?= $user['pending_changes'] ? 'disabled' : '' ?>>Save Changes</button>
         </form>
 
-        <?php if ($user['pending_changes']): ?>
-            <p>Your updates are pending approval by the Admin or Super Admin.</p>
-        <?php endif; ?>
+            <?php if ($user['pending_changes']): ?>
+                <p>Your updates are pending approval by the Admin or Super Admin.</p>
+            <?php endif; ?>
+        </div>
     </div>
+
 
     <script>
         // Logout functionality

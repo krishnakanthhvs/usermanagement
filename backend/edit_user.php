@@ -1,34 +1,74 @@
 <?php
-include '../backend/db.php';
+session_start();
+include 'db.php'; // Include the database connection file
 
-$id = $_GET['id'];
-$sql = "SELECT * FROM users WHERE id = :id";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([':id' => $id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $role = $_POST['role'];
+    $mobile = $_POST['mobile'];
+    $address = $_POST['address'];
+    $gender = $_POST['gender'];
+    $dob = $_POST['dob'];
+
+    // Handle optional profile picture upload
+    $profilePicture = null;
+    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+        $targetDir = "../uploads/";
+        $fileName = basename($_FILES['profile_picture']['name']);
+        $targetFilePath = $targetDir . $fileName;
+
+        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $targetFilePath)) {
+            $profilePicture = $fileName;
+        }
+    }
+
+    try {
+        // Prepare the SQL query
+        $sql = "UPDATE users SET 
+                name = :name, 
+                email = :email, 
+                role = :role, 
+                mobile = :mobile, 
+                address = :address, 
+                gender = :gender, 
+                dob = :dob";
+
+        // Include profile picture if updated
+        if ($profilePicture) {
+            $sql .= ", profile_picture = :profile_picture";
+        }
+
+        $sql .= " WHERE id = :id";
+
+        $stmt = $pdo->prepare($sql);
+        $params = [
+            ':name' => $name,
+            ':email' => $email,
+            ':role' => $role,
+            ':mobile' => $mobile,
+            ':address' => $address,
+            ':gender' => $gender,
+            ':dob' => $dob,
+            ':id' => $id
+        ];
+
+        if ($profilePicture) {
+            $params[':profile_picture'] = $profilePicture;
+        }
+
+        // Execute the query
+        $stmt->execute($params);
+
+        // Send success response
+        echo json_encode(['success' => true, 'message' => 'User updated successfully.']);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+} else {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+}
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit User</title>
-</head>
-<body>
-    <h1>Edit User</h1>
-    <form action="../backend/update_user.php" method="POST">
-        <input type="hidden" name="id" value="<?= $user['id'] ?>">
-        <label>Name:</label><br>
-        <input type="text" name="name" value="<?= $user['name'] ?>" required><br>
-        <label>Email:</label><br>
-        <input type="email" name="email" value="<?= $user['email'] ?>" required><br>
-        <label>Role:</label><br>
-        <select name="role" required>
-            <option value="User" <?= $user['role'] === 'User' ? 'selected' : '' ?>>User</option>
-            <option value="Admin" <?= $user['role'] === 'Admin' ? 'selected' : '' ?>>Admin</option>
-        </select><br>
-        <label>Mobile:</label><br>
-        <input type="text" name="mobile" value="<?= $user['mobile'] ?>" required><br>
-        <button type="submit">Update User</button>
-    </form>
-</body>
-</html>

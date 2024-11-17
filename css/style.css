@@ -1,3 +1,7 @@
+body{
+    margin: 0px;
+}
+
 /* Utility Classes for Layout */
 .flex {
     display: flex;
@@ -29,6 +33,10 @@
 .py-2 {
     padding-top: 0.5rem; /* 8px */
     padding-bottom: 0.5rem; /* 8px */
+}
+
+.m-4{
+    margin: 1rem;
 }
 
 /* Borders */
@@ -394,4 +402,171 @@ h2 {
 #paginationControls {
     margin-top: 20px;
     text-align: center;
+}
+
+#paginationControls button {
+    margin: 0 5px; /* Add horizontal space between buttons */
+    padding: 5px 10px; /* Add some padding for better clickability */
+    cursor: pointer; /* Change cursor on hover */
+}
+
+#paginationControls button:disabled {
+    cursor: not-allowed; /* Show a disabled cursor on disabled buttons */
+    opacity: 0.5; /* Make disabled buttons appear slightly transparent */
+}
+
+
+.records-label,
+#recordsPerPage {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px; /* Adds spacing between label and dropdown */
+}
+
+#recordsPerPage {
+    padding: 5px; /* Adjust dropdown padding for better alignment */
+    font-size: 14px; /* Optional: Match font size */
+}
+
+table {
+    margin-top: 20px; /* Adds space between the dropdown and the table */
+}
+
+/* Container for both controls */
+.controls {
+    display: flex;
+    justify-content: space-between; /* Space out left and right controls */
+    align-items: center; /* Align items vertically */
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* Left side control styling */
+.left-control {
+    display: flex;
+    align-items: center; /* Align label and select */
+}
+
+/* Right side control styling */
+.right-control {
+    display: flex;
+    align-items: center; /* Align label and input */
+}
+
+/* Label styling to add some spacing */
+.records-label, .search-label {
+    margin-right: 8px; /* Space between label and input */
+}
+
+/* Styling the select dropdown */
+#recordsPerPage {
+    padding: 5px;
+    font-size: 14px;
+}
+
+/* Styling the search input */
+#searchInput {
+    padding: 5px;
+    font-size: 14px;
+    width: 250px; /* Fixed width for consistency */
+}
+
+/* Header container */
+.header {
+    display: flex;
+    justify-content: space-between; /* Space out the elements */
+    align-items: center; /* Align the items vertically */
+    background-color: #333; /* Dark background color for the header */
+    color: white; /* White text */
+    padding: 10px 20px; /* Add some padding around the header */
+}
+
+/* Style for the greeting and logout container */
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+/* Greeting style */
+#greeting {
+    margin-right: 15px; /* Space between greeting and logout button */
+    font-size: 16px;
+}
+
+/* Style for the logout button */
+.logout-btn {
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: #f44336; /* Red background color for the logout button */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+}
+
+/* Ensure the user-info section displays elements vertically */
+.user-info {
+    display: block;  /* Change from flex to block so that elements stack vertically */
+    margin-bottom: 20px; /* Add space between the user info and the form */
+}
+
+.profile-picture {
+    border-radius: 50%;  /* Make the profile picture round */
+    object-fit: cover;   /* Ensure the image fits within its container */
+    width: 150px;
+    height: 150px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Style the form elements */
+form label {
+    font-weight: bold;
+}
+
+form input, form textarea, form select {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+form button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+form button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+form textarea {
+    resize: vertical;
+    height: 100px;
+}
+
+form input[type="file"] {
+    padding: 0;
+}
+
+/* Additional style for the pending approval message */
+.pending-message {
+    color: red;
+    font-weight: bold;
+}
+
+.user-dashboard{
+    padding: 0 20rem;
 }

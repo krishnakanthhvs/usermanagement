@@ -14,88 +14,36 @@ if (isset($_SESSION['message'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Super Admin Dashboard</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        .logout-btn {
-            float: right;
-            margin-bottom: 10px;
-        }
-
-        .message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        #paginationControls {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-        }
-
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 400px;
-        }
-
-        .modal input, .modal select, .modal button {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .modal button {
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <h1>Admin Dashboard</h1>
-    <button class="logout-btn" id="logout">Logout</button>
-    
-    <label for="recordsPerPage">Records per page: </label>
-    <select id="recordsPerPage">
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="30">30</option>
-        <option value="40">40</option>
-    </select>
+    <div class="header mb-4">
+        <h1>Super Admin Dashboard</h1>
+        <div class="user-info">
+            <span id="greeting">Hi, <span id="userName">Admin</span></span>
+            <button class="logout-btn" id="logout">Logout</button>
+        </div>
+    </div>
+
+    <div class="m-4">
+        <div class="controls">
+        <div class="left-control">
+            <label for="recordsPerPage" class="records-label">Records </label>
+            <select id="recordsPerPage">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+            </select>
+            <label for="recordsPerPage" class="records-label">page</label>
+        </div>
+        <div class="right-control">
+            <label for="searchInput" class="search-label">Search:</label>
+            <input type="text" id="searchInput" placeholder="Search users by name, email, or role">
+        </div>
+    </div>
 
     <table id="userTable">
         <thead>
@@ -116,6 +64,8 @@ if (isset($_SESSION['message'])) {
             <!-- Dynamic Data Will Be Rendered Here -->
         </tbody>
     </table>
+    </div>
+    
 
     <div id="paginationControls"></div>
 
@@ -314,6 +264,107 @@ if (isset($_SESSION['message'])) {
                 window.location.href = "../backend/logout.php";
             });
         });
+
+        $(document).ready(function () {
+    let currentPage = 1;
+    let limit = 10;
+    let searchQuery = "";
+
+    // Load user data
+    function loadUsers(page = 1, limit = 10, query = "") {
+        $.ajax({
+            url: "../backend/get_all_users.php",
+            method: "GET",
+            data: { page: page, limit: limit, search: query },
+            dataType: "json",
+            success: function (data) {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                let rows = "";
+                data.users.forEach(user => {
+                    rows += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.role}</td>
+                            <td>${user.mobile}</td>
+                            <td>${user.address}</td>
+                            <td>${user.gender}</td>
+                            <td>${user.dob || "N/A"}</td>
+                            <td>
+                                ${user.profile_picture ? `<img src="../uploads/${user.profile_picture}" alt="Profile" width="50">` : "No Picture"}
+                            </td>
+                            <td>
+                                <a href="#" class="editUser" data-id="${user.id}">Edit</a> |
+                                ${user.approved != 1 ? 
+                                    `<a href="../backend/approve_user.php?id=${user.id}">Approve</a>` : 
+                                    "<span>Approved</span>"
+                                }
+                                <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                $("#userTable tbody").html(rows);
+
+                // Generate pagination controls
+                const totalPages = Math.ceil(data.total_users / limit);
+                let paginationControls = `<button ${page === 1 ? 'disabled' : ''} id="prevPage">Previous</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationControls += `<button class="pageNumber" data-page="${i}" ${i === page ? 'disabled' : ''}>${i}</button>`;
+                }
+                paginationControls += `<button ${page === totalPages ? 'disabled' : ''} id="nextPage">Next</button>`;
+
+                $("#paginationControls").html(paginationControls);
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching user data:", error);
+            }
+        });
+    }
+
+    loadUsers(currentPage, limit);
+
+    // Search functionality
+    $("#searchInput").on("keyup", function () {
+        searchQuery = $(this).val();
+        loadUsers(currentPage, limit, searchQuery);
+    });
+
+    // Pagination button click
+    $(document).on("click", ".pageNumber", function () {
+        currentPage = $(this).data("page");
+        loadUsers(currentPage, limit, searchQuery);
+    });
+
+    // Next page
+    $("#nextPage").click(function () {
+        if (currentPage < Math.ceil(totalUsers / limit)) {
+            currentPage++;
+            loadUsers(currentPage, limit, searchQuery);
+        }
+    });
+
+    // Previous page
+    $("#prevPage").click(function () {
+        if (currentPage > 1) {
+            currentPage--;
+            loadUsers(currentPage, limit, searchQuery);
+        }
+    });
+
+    // Change records per page
+    $("#recordsPerPage").change(function () {
+        limit = $(this).val();
+        loadUsers(currentPage, limit, searchQuery);
+    });
+});
+
     </script>
 </body>
 </html>

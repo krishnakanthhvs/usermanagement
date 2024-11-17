@@ -1,46 +1,48 @@
 <?php
 session_start();
-include 'db.php';
+include 'db.php'; // Include the database connection file
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Capture the login form inputs
     $email = $_POST['email'];
     $password = $_POST['password'];
 
     try {
-        // Query the database for the user with the provided email
+        // Fetch user from the database using $pdo
         $sql = "SELECT * FROM users WHERE email = :email";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare($sql); // Use $pdo from db.php
         $stmt->execute([':email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // If user exists and the password matches
         if ($user && password_verify($password, $user['password'])) {
+            if ($user['approved'] != 1) {
+                // User not approved
+                header("Location: ../index.php?error=Your account is yet to be activated by the admin.");
+                exit;
+            }
+
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_role'] = $user['role'];
+            $_SESSION['user_name'] = $user['name'];
 
-            // Redirect based on role
-            if ($user['role'] == 'Super Admin') {
+            // Redirect to appropriate dashboard
+            if ($user['role'] === 'Super Admin') {
                 header("Location: ../dashboard/superadmin.php");
-            } elseif ($user['role'] == 'Admin') {
+            } elseif ($user['role'] === 'Admin') {
                 header("Location: ../dashboard/admin.php");
             } else {
                 header("Location: ../dashboard/user.php");
             }
             exit;
         } else {
-            // Redirect back with error message
-            header("Location: ../index.php?error=Invalid credentials");
+            // Invalid credentials
+            header("Location: ../index.php?error=Invalid email or password.");
             exit;
         }
     } catch (PDOException $e) {
-        // Handle error gracefully and redirect with error message
-        header("Location: ../index.php?error=An error occurred. Please try again.");
-        exit;
+        die("Error: " . $e->getMessage());
     }
 } else {
-    // If the form is not submitted, redirect to the login page
     header("Location: ../index.php");
     exit;
 }
