@@ -67,9 +67,8 @@ unset($_SESSION['message'], $_SESSION['message_type']);
                     <div class="form-group">
                         <label for="gender">Gender</label>
                         <label><input type="radio" name="gender" value="Male" required> Male</label>
-    <label><input type="radio" name="gender" value="Female" required> Female</label>
-    <label><input type="radio" name="gender" value="Other" required> Other</label>
-
+                        <label><input type="radio" name="gender" value="Female" required> Female</label>
+                        <label><input type="radio" name="gender" value="Other" required> Other</label>
                     </div>
                     <div class="form-group">
                         <label for="dob">Date of Birth:</label>
