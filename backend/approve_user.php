@@ -8,22 +8,17 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && $_SES
     exit;
 }
 
-// Get the user ID from the URL
 $userId = isset($_GET['id']) ? $_GET['id'] : null;
 
 if ($userId) {
-    // Get user details including pending changes and current approval status
     $sql = "SELECT pending_changes, approved FROM users WHERE id = :id";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':id' => $userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
-        // Check if the user is approved or not
         if ($user['approved'] == 1) {
-            // The user is approved, check for pending changes
             if ($user['pending_changes']) {
-                // Apply pending changes if they exist
                 $pendingChanges = json_decode($user['pending_changes'], true);
 
                 $sqlUpdate = "UPDATE users SET 

@@ -107,9 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" <?= $user['pending_changes'] ? 'disabled' : '' ?>>Save Changes</button>
         </form>
 
-            <?php if ($user['pending_changes']): ?>
-                <p>Your updates are pending approval by the Admin or Super Admin.</p>
-            <?php endif; ?>
+        <?php if ($user['pending_changes']): ?>
+            <p>Your updates are pending approval by the Admin or Super Admin.</p>
+        <?php endif; ?>
         </div>
     </div>
 

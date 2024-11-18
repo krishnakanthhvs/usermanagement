@@ -40,7 +40,7 @@ $stmt->execute([
     ':mobile' => $pendingChanges['mobile'],
     ':address' => $pendingChanges['address'],
     ':gender' => $pendingChanges['gender'],
-    ':dob' => $dob, // Use the validated $dob variable
+    ':dob' => $dob,
     ':profile_picture' => $profilePicture,
     ':role' => $role,
     ':id' => $userId

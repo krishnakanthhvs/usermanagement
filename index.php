@@ -8,7 +8,6 @@ if (isset($_SESSION['user_id'])) {
 // Capture the error message if it exists
 $errorMessage = isset($_GET['error']) ? $_GET['error'] : null;
 
-// Optional: Display a logout success message
 if (isset($_GET['logout']) && $_GET['logout'] == 1) {
     $logoutMessage = "You have been logged out successfully.";
 }

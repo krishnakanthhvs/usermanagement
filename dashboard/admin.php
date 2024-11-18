@@ -1,11 +1,10 @@
 <?php
 session_start();
 
-// Display message if set
 if (isset($_SESSION['message'])) {
     $messageType = $_SESSION['message_type'] === "success" ? "success" : "error";
     echo "<div class='message {$messageType}'>{$_SESSION['message']}</div>";
-    unset($_SESSION['message'], $_SESSION['message_type']); // Clear message
+    unset($_SESSION['message'], $_SESSION['message_type']); 
 }
 ?>
 
@@ -76,65 +75,63 @@ if (isset($_SESSION['message'])) {
 
             // Load user data
             function loadUsers(page = 1, limit = 10, query = "") {
-    $.ajax({
-        url: "../backend/get_all_users.php",
-        method: "GET",
-        data: { page: page, limit: limit, search: query },
-        dataType: "json",
-        success: function (data) {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+            $.ajax({
+                url: "../backend/get_all_users.php",
+                method: "GET",
+                data: { page: page, limit: limit, search: query },
+                dataType: "json",
+                success: function (data) {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
 
-            let rows = "";
-            data.users.forEach(user => {
-                rows += `
-                    <tr>
-                        <td>${user.id}</td>
-                        <td>${user.name}</td>
-                        <td>${user.email}</td>
-                        <td>${user.role}</td>
-                        <td>${user.mobile}</td>
-                        <td>${user.address}</td>
-                        <td>${user.gender}</td>
-                        <td>${user.dob || "N/A"}</td>
-                        <td>
-                            ${user.profile_picture ? `<img src="../uploads/${user.profile_picture}" alt="Profile" width="50">` : "No Picture"}
-                        </td>
-                        <td>
-                            ${user.pending_changes ? 
-                                `<a href="../backend/approve_user.php?id=${user.id}">Approve Changes</a>` :
-                                (user.approved == 0 ? 
-                                    `<a href="../backend/approve_user.php?id=${user.id}">Approve User</a>` : 
-                                    "<span>Approved</span>"
-                                )
-                            }
-                            <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
-                        </td>
-                    </tr>
-                `;
+                    let rows = "";
+                    data.users.forEach(user => {
+                        rows += `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.role}</td>
+                                <td>${user.mobile}</td>
+                                <td>${user.address}</td>
+                                <td>${user.gender}</td>
+                                <td>${user.dob || "N/A"}</td>
+                                <td>
+                                    ${user.profile_picture ? `<img src="../uploads/${user.profile_picture}" alt="Profile" width="50">` : "No Picture"}
+                                </td>
+                                <td>
+                                    ${user.pending_changes ? 
+                                        `<a href="../backend/approve_user.php?id=${user.id}">Approve Changes</a>` :
+                                        (user.approved == 0 ? 
+                                            `<a href="../backend/approve_user.php?id=${user.id}">Approve User</a>` : 
+                                            "<span>Approved</span>"
+                                        )
+                                    }
+                                    <a href="../backend/delete_user.php?id=${user.id}">Delete</a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    $("#userTable tbody").html(rows);
+
+                    // Generate pagination controls
+                    const totalPages = Math.ceil(data.total_users / limit);
+                    let paginationControls = `<button ${page === 1 ? 'disabled' : ''} id="prevPage">Previous</button>`;
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginationControls += `<button class="pageNumber" data-page="${i}" ${i === page ? 'disabled' : ''}>${i}</button>`;
+                    }
+                    paginationControls += `<button ${page === totalPages ? 'disabled' : ''} id="nextPage">Next</button>`;
+
+                    $("#paginationControls").html(paginationControls);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error fetching user data:", error);
+                }
             });
-
-            $("#userTable tbody").html(rows);
-
-            // Generate pagination controls
-            const totalPages = Math.ceil(data.total_users / limit);
-            let paginationControls = `<button ${page === 1 ? 'disabled' : ''} id="prevPage">Previous</button>`;
-            for (let i = 1; i <= totalPages; i++) {
-                paginationControls += `<button class="pageNumber" data-page="${i}" ${i === page ? 'disabled' : ''}>${i}</button>`;
-            }
-            paginationControls += `<button ${page === totalPages ? 'disabled' : ''} id="nextPage">Next</button>`;
-
-            $("#paginationControls").html(paginationControls);
-        },
-        error: function (xhr, status, error) {
-            console.error("Error fetching user data:", error);
-        }
-    });
 }
-
-
             loadUsers(currentPage, limit);
 
             // Search functionality
@@ -178,7 +175,7 @@ if (isset($_SESSION['message'])) {
                     method: "POST",
                     success: function () {
                         alert("Logged out successfully.");
-                        window.location.href = "../index.php"; // Redirect to login page
+                        window.location.href = "../index.php"; 
                     },
                     error: function () {
                         alert("Failed to logout.");
